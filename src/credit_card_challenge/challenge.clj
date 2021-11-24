@@ -13,7 +13,7 @@
          (l/compras-do-mes (jt/local-date-time 2022 12) (db/todas-as-compras)))
 
 (println "\nTotal das compras do mês atual:"
-         (l/compras-do-mes-atual (db/todas-as-compras)))
+         (l/compras-do-mes (db/todas-as-compras)))
 
 (println "\nFatura do mês atual filtrado por cartão:"
          (l/fatura-por-cartao 2 (db/todas-as-compras)))
@@ -27,3 +27,4 @@
 
 (println "\nBusca por valor (intervalo fechado de 200 a 900): ")
 (println (l/busca-por-intervalo-fechado-valor 200 900 (db/todas-as-compras)))
+
