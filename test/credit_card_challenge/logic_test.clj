@@ -13,12 +13,12 @@
                    :valor           60.0,
                    :estabelecimento "Mercado Extra",
                    :categoria       "Alimentação"},
-          compra2  {:id              2,
-                    :id-cartao       6,
-                    :data            (jt/local-date-time 2021 11 18 9 39 30),
-                    :valor           50.0,
-                    :estabelecimento "Mercado Extra",
-                    :categoria       "Alimentação"},
+          compra2 {:id              2,
+                   :id-cartao       6,
+                   :data            (jt/local-date-time 2021 11 18 9 39 30),
+                   :valor           50.0,
+                   :estabelecimento "Mercado Extra",
+                   :categoria       "Alimentação"},
           compras [compra1 compra2]]
       (is (= [compra1]
              (busca-por-intervalo-fechado-valor 55 60 compras))))))
@@ -33,5 +33,28 @@
 
     (is (thrown? clojure.lang.ExceptionInfo
                  (total-por-categoria nil [nil])))
+
+    (is (thrown? clojure.lang.ExceptionInfo
+                 (total-por-categoria "Educação" [{:id              3,
+                                                   :id-cartao       2,
+                                                   :data            (jt/local-date-time 2022 12 21 7 20 30),
+                                                   :valor           300.00,
+                                                   :estabelecimento "Cambly"
+                                                  }])))
     ))
+
+(deftest total-lista-compras-test
+  (testing "não pode invocar total lista de compras sem simbolos obrigatórios"
+    (is (thrown? clojure.lang.ExceptionInfo
+                 (total-lista-de-compras [nil])))
+
+    (is (thrown? clojure.lang.ExceptionInfo
+                 (total-lista-de-compras [{:id              3,
+                                           :id-cartao       2,
+                                           :data            (jt/local-date-time 2022 12 21 7 20 30),
+                                           :estabelecimento "Cambly",
+                                           :categoria       "Educação"}])))
+
+    ))
+
 

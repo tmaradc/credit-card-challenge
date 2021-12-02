@@ -8,13 +8,16 @@
 (s/defn total-lista-de-compras :- s/Num
         "Somatorio dos totais da lista compra"
         [lista :- md/ListaDeCompras]
+        {:pre (contains? :valor lista)}
         (reduce + (map :valor lista)))
+
+;(println "total-lista-de-compras:" (total-lista-de-compras [nil]))
 
 ; TODO: VOLTAR AQUI PARA COLOCAR SCHEMA NOS PARÂMETROS DESSA FUNC
 (s/defn total-por-categoria :- md/CategoriaGasto
         "Recebe lista de compras agrupadas por categoria e efetua o calculo dos totais de cada categoria"
         [categoria :- s/Str, lista-compras :- md/ListaDeCompras]
-        {:pre (contains? categoria lista-compras)}
+        {:pre [(contains? categoria lista-compras), (contains? :categoria lista-compras)]}
         {:categoria   categoria
          :gasto-total (total-lista-de-compras lista-compras)})
 
