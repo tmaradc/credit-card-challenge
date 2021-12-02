@@ -1,22 +1,25 @@
 (ns credit-card-challenge.logic
   (:require [credit-card-challenge.db :as db])
+  (:require [credit-card-challenge.model :as md])
+  (:require [schema.core :as s])
   (:require [java-time :as jt]))
 
 ;--------------------------- GASTOS POR CATEGORIA ----------------------------
-(defn total-lista-de-compras
+(s/defn total-lista-de-compras :- s/Num
   "Somatorio dos totais da lista compra"
-  [lista]
+  [lista :- md/ListaDeCompras]
   (reduce + (map :valor lista)))
 
-(defn total-por-categoria
+; TODO: VOLTAR AQUI PARA COLOCAR SCHEMA NOS PARÂMETROS DESSA FUNC
+(s/defn total-por-categoria :- md/CategoriaGasto
   "Recebe lista de compras agrupadas por categoria e efetua o calculo dos totais de cada categoria"
   [[categoria lista-compras]]
   {:categoria   categoria
    :gasto-total (total-lista-de-compras lista-compras)})
 
-(defn lista-valor-total-por-categoria
+(s/defn lista-valor-total-por-categoria :- md/ListaCategoriaGasto
   "Agrupa compras por categoria fazendo calculo de totais da categoria"
-  [lista-de-compras]
+  [lista-de-compras :- md/ListaDeCompras]
   (->> lista-de-compras
        (group-by :categoria)
        (map total-por-categoria)))
@@ -25,30 +28,32 @@
 
 ;------------------------------ FATURA DO MÊS -------------------------------
 (def data-hora-atual (jt/local-date-time))
+(class data-hora-atual)
 ;(as (local-date) :year :month-of-year)
 
-(defn mesmo-mes?
+(s/defn mesmo-mes? :- s/Bool
   "Verifica se o mês da compra é igual ao mês atual"
-  [mes-da-compra]
+  [mes-da-compra :- md/Compra]
   (= (jt/month data-hora-atual) (jt/month (:data mes-da-compra))))
 
-(defn mesmo-ano?
+(s/defn mesmo-ano? :- s/Bool
   "Verifica se o ano da compra é igual ao ano atual"
-  [ano-da-compra]
+  [ano-da-compra :- md/Compra]
   (= (jt/year data-hora-atual) (jt/year (:data ano-da-compra))))
 
-(defn mesmo-mes-e-ano?
+(s/defn mesmo-mes-e-ano? :- s/Bool
   "Verifica se o ano e mes da compra é igual ao ano e mês atual"
-  [data-compra]
+  [data-compra :- md/Compra]
   (and (mesmo-ano? data-compra) (mesmo-mes? data-compra)))
 
-(defn compras-do-mes
+(s/defn compras-do-mes :- s/Num
   "Soma total das compras efetuadas no mês"
-  ([lista-compras]
+  ([lista-compras :- md/ListaDeCompras]
    (->> lista-compras
         (filter mesmo-mes-e-ano?)
         total-lista-de-compras))
-  ([data lista-compras]
+
+  ([data :- md/DateTime, lista-compras :- md/ListaDeCompras]
    (->> lista-compras
         (filter #(= (jt/month data) (jt/month (:data %))))
         (filter #(= (jt/year data) (jt/year (:data %))))
@@ -57,11 +62,12 @@
 
 ;(println (compras-do-mes (jt/local-date-time 2022 12) (db/todas-as-compras)))
 
-;(println (compras-do-mes-atual (db/todas-as-compras)))
+;(println (compras-do-mes (db/todas-as-compras)))
 
-(defn fatura-por-cartao
+(s/defn fatura-por-cartao :- s/Num
   "Filtra as compras feitas por cartão"
-  [id-cartao lista]
+  [id-cartao :- md/PosInt,
+   lista :- md/ListaDeCompras]
   (->> lista
        (filter #(= id-cartao (:id-cartao %)))
        compras-do-mes
@@ -70,24 +76,30 @@
 ;(println (fatura-por-cartao 2 (db/todas-as-compras)))
 
 ;------------------- BUSCA POR VALOR OU ESTABELECIMENTO ---------------------
-(defn busca-por-estabelecimento
+(s/defn busca-por-estabelecimento :- md/ListaDeCompras
   "Filtra as compras por estabelecimento"
-  [estabelecimento lista-de-compras]
+  [estabelecimento :- s/Str,
+   lista-de-compras :- md/ListaDeCompras]
   (filter #(= estabelecimento (:estabelecimento %)) lista-de-compras))
 
 ;(println (busca-por-estabelecimento "Mercado Extra" (db/todas-as-compras)))
 
-(defn busca-por-valor
+; TODO: como definir o schema de condicao?
+(s/defn busca-por-valor :- md/ListaDeCompras
   "Filtra as compras feitas pelo valor, podendo usar operadores relacionais para indicar o range"
-  [lista-de-compras condicao valor]
+  [lista-de-compras :- md/ListaDeCompras,
+   condicao,
+   valor :- s/Num]
   (filter #(condicao (:valor %) valor) lista-de-compras))
 
 ; (let [compras (db/todas-as-compras)]
 ;  (println (busca-por-valor compras = 90.5)))
 
-(defn busca-por-intervalo-fechado-valor
+(s/defn busca-por-intervalo-fechado-valor :- md/ListaDeCompras
   "Filtra as compras feitas pelo range de valores"
-  [limite-inferior limite-superior lista-de-compras]
+  [limite-inferior :- s/Num,
+   limite-superior :- s/Num,
+   lista-de-compras :- md/ListaDeCompras]
   (-> lista-de-compras
       (busca-por-valor >= limite-inferior)
       (busca-por-valor <= limite-superior)))
