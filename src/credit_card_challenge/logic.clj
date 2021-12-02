@@ -55,7 +55,7 @@
 ; TODO: VOLTAR AQUI PARA COLOCAR SCHEMA NOS PARÂMETROS DESSA FUNC
 (s/defn total-por-categoria :- md/CategoriaGasto
         "Recebe lista de compras agrupadas por categoria e efetua o calculo dos totais de cada categoria"
-        [[categoria lista-compras]]
+        [[categoria lista-compras]] :- md/ListaPorCategoria
   ;{:pre (mesma-categoria-para-todos? categoria lista-compras)}
         {:categoria   categoria
          :gasto-total (total-lista-de-compras lista-compras)})
@@ -154,3 +154,6 @@
             (busca-por-valor <= limite-superior)))
 
 ;(println (busca-por-intervalo-fechado-valor 200 900 (db/todas-as-compras)))
+
+
+

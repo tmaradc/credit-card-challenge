@@ -36,6 +36,8 @@
 
 (def ListaCategoriaGasto [CategoriaGasto])
 
+(def ListaPorCategoria [s/Str ListaDeCompras])
+
 ;(s/validate ListaDeCompras [db/compra1])
 ;(s/validate ListaDeCompras (db/todas-as-compras))
 
