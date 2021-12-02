@@ -1,8 +1,38 @@
 (ns credit-card-challenge.logic
-  (:require [credit-card-challenge.db :as db])
-  (:require [credit-card-challenge.model :as md])
-  (:require [schema.core :as s])
-  (:require [java-time :as jt]))
+  (:require [credit-card-challenge.db :as db]
+            [credit-card-challenge.model :as md]
+            [schema.core :as s]
+            [java-time :as jt]))
+
+;---------------------------------- COMPRAS -----------------------------------
+(s/defn adicionar-compra :- md/ListaDeCompras
+  [compra :- md/Compra, lista-de-compras :- md/ListaDeCompras]
+  (conj lista-de-compras compra))
+
+
+(s/defn listar-compras :- nil
+  [lista-de-compras :- md/ListaDeCompras]
+  (doseq [compra lista-de-compras]
+    (println "-------------------------------------------")
+    ;(println "id:" (:id compra))
+    ;(println "id-cartão:" (:id-cartao compra))
+    (println "data:" (jt/format "yyyy/MM/dd HH:mm:ss" (:data compra)))
+    (println "valor:" (:valor compra))
+    (println "estabelecimento:" (:estabelecimento compra))
+    (println "categoria:" (:categoria compra))
+    (println "\n")
+    lista-de-compras
+    ))
+
+(listar-compras (db/todas-as-compras))
+
+(adicionar-compra {:id              5,
+                   :id-cartao       2,
+                   :data            (jt/local-date-time 2022 12 21 7 20 30),
+                   :valor           900.00,
+                   :estabelecimento "Cambly",
+                   :categoria       "Educação"} (db/todas-as-compras))
+
 
 ;--------------------------- GASTOS POR CATEGORIA ----------------------------
 (s/defn total-lista-de-compras :- s/Num
@@ -13,11 +43,20 @@
 
 ;(println "total-lista-de-compras:" (total-lista-de-compras [nil]))
 
+;(s/defn mesma-categoria-para-todos? :- s/Bool
+;  "Verificar se todas as compras da lista possuem a mesma categoria"
+;  [categoria lista-de-compras]
+;  (->> lista-de-compras
+;       (map :categoria)
+;       (filter #(not= % categoria))
+;       count 0
+;       (= 0)))
+
 ; TODO: VOLTAR AQUI PARA COLOCAR SCHEMA NOS PARÂMETROS DESSA FUNC
 (s/defn total-por-categoria :- md/CategoriaGasto
         "Recebe lista de compras agrupadas por categoria e efetua o calculo dos totais de cada categoria"
-        [categoria :- s/Str, lista-compras :- md/ListaDeCompras]
-        {:pre [(contains? categoria lista-compras), (contains? :categoria lista-compras)]}
+        [[categoria lista-compras]]
+  ;{:pre (mesma-categoria-para-todos? categoria lista-compras)}
         {:categoria   categoria
          :gasto-total (total-lista-de-compras lista-compras)})
 
@@ -34,6 +73,7 @@
              (map total-por-categoria)))
 
 ;(println (lista-valor-total-por-categoria (db/todas-as-compras)))
+;(println (contains? (db/todas-as-compras) :categoria))
 
 ;------------------------------ FATURA DO MÊS -------------------------------
 (def data-hora-atual (jt/local-date-time))
@@ -95,11 +135,11 @@
 
 ; TODO: como definir o schema de condicao?
 (s/defn busca-por-valor :- md/ListaDeCompras
-        "Filtra as compras feitas pelo valor, podendo usar operadores relacionais para indicar o range"
-        [lista-de-compras :- md/ListaDeCompras,
-         condicao,
-         valor :- s/Num]
-        (filter #(condicao (:valor %) valor) lista-de-compras))
+  "Filtra as compras feitas pelo valor, podendo usar operadores relacionais para indicar o range"
+  [lista-de-compras :- md/ListaDeCompras,
+   condicao,
+   valor :- s/Num]
+  (filter #(condicao (:valor %) valor) lista-de-compras))
 
 ; (let [compras (db/todas-as-compras)]
 ;  (println (busca-por-valor compras = 90.5)))

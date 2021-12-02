@@ -47,7 +47,9 @@
               :data            (jt/local-date-time 2022 12 22 9 39 30),
               :valor           30.50,
               :estabelecimento "Mercado Extra",
-              :categoria       "Alimentação"})
+              :categoria       "Alimentação"
+              }
+  )
 
 (defn todas-as-compras []
   [compra1, compra2, compra3, compra4])

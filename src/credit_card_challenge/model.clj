@@ -5,6 +5,8 @@
 
 (s/set-fn-validation! true)
 
+;TODO: Depois mudar o id para Uuid
+
 (def PosInt (s/pred pos-int? 'inteiro-positivo))
 (def DateTime (class (jt/local-date-time)))
 
@@ -27,7 +29,7 @@
              :estabelecimento s/Str,
              :categoria       s/Str})
 
-(def ListaDeCompras [Compra])
+(s/def ListaDeCompras [Compra])
 
 (def CategoriaGasto {:categoria   s/Str
                      :gasto-total s/Num})
