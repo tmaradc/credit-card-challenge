@@ -1,128 +1,57 @@
 (ns credit-card-challenge.logic-test
-  (:require [credit-card-challenge.logic :refer :all])
-  (:require [credit-card-challenge.db :refer :all])
-  (:require [java-time :as jt])
-  (:require [clojure.test :refer :all]
-            [credit-card-challenge.db :as db]))
-
+  (:require [credit-card-challenge.logic :refer :all]
+            [credit-card-challenge.db :refer :all]
+            [java-time :as jt]
+            [clojure.test :refer :all]
+            [credit-card-challenge.db :as db]
+            [credit-card-challenge.factory :as ex]))
 
 
 (deftest busca-por-intervalo-fechado-valor-test
   (testing "retorna compras com valores no limite"
-    (let [
-          compra1 {:id              1,
-                   :id-cartao       6,
-                   :data            (jt/local-date-time 2021 11 18 9 39 30),
-                   :valor           60.0,
-                   :estabelecimento "Mercado Extra",
-                   :categoria       "Alimentação"},
-          compra2 {:id              2,
-                   :id-cartao       6,
-                   :data            (jt/local-date-time 2021 11 18 9 39 30),
-                   :valor           50.0,
-                   :estabelecimento "Mercado Extra",
-                   :categoria       "Alimentação"},
-          compras [compra1 compra2]]
-      (is (= [compra1]
-             (busca-por-intervalo-fechado-valor 55 60 compras))))))
+    (let [compras [ex/compra1 ex/compra2]]
+      (is (= [ex/compra1]
+             (busca-por-intervalo-fechado-valor (:valor compra1) 60 compras))))))
 
-;
-;
 (deftest listar-compras-test
+  (testing "passar uma lista com valores válidos"
+      (is (= #{ex/compra1SemId ex/compra2SemId ex/compra3SemId}
+             (listar-compras [ex/compra1 ex/compra2 ex/compra3]))))
+
+  (testing "passar uma compra sem ID"
+    (is (thrown? clojure.lang.ExceptionInfo
+           (listar-compras [ex/compra1SemId ex/compra2 ex/compra3]))))
+
+  (testing "passar uma lista de compras com uma compra sem o keyword valor"
+    (is (thrown? clojure.lang.ExceptionInfo
+                 (listar-compras [ex/compraSemKeyWordValor ex/compra2 ex/compra3]))))
+
+  (testing "passar uma lista de compras com uma compra com o valor negativo"
+    (is (thrown? clojure.lang.ExceptionInfo
+                 (listar-compras [ex/compraComValorNegativo ex/compra2 ex/compra3]))))
 
   (testing "passar uma lista vazia"
-    (is (= #{} (lista-valor-total-por-categoria [])))
-    (is (= #{} (lista-valor-total-por-categoria nil))))
-
+    (is (= #{} (listar-compras [])))
+    (is (= #{} (listar-compras nil))))
   )
 
 (deftest lista-valor-total-por-categoria-test
   (testing "passar uma lista com valores válidos"
-    (let [compra1 {:id              1,
-                   :id-cartao       6,
-                   :data            (jt/local-date-time 2021 12 3 7 20 30),
-                   :valor           30.00,
-                   :estabelecimento "Cambly",
-                   :categoria       "Educação"}
-          compra2 {:id              2,
-                   :id-cartao       6,
-                   :data            (jt/local-date-time 2021 12 3 8 20 30),
-                   :valor           150.00,
-                   :estabelecimento "Cambly",
-                   :categoria       "Educação"}
-          compra3 {:id              3,
-                   :id-cartao       6,
-                   :data            (jt/local-date-time 2021 12 3 9 20 30),
-                   :valor           60.00,
-                   :estabelecimento "Cambly",
-                   :categoria       "Educação"}]
-      (is (= #{ {:categoria "Educação", :gasto-total 240.0} }
-             (lista-valor-total-por-categoria [compra1 compra2 compra3])))))
+      (is (= #{{:categoria "Educação", :gasto-total 240.0}}
+             (lista-valor-total-por-categoria [ex/compra1 ex/compra2 ex/compra3]))))
 
   (testing "passar uma lista com valores válidos 2"
-    (let [compra1 {:id              1,
-                   :id-cartao       6,
-                   :data            (jt/local-date-time 2021 12 3 7 20 30),
-                   :valor           30.00,
-                   :estabelecimento "Pacheco",
-                   :categoria       "Saúde"}
-          compra2 {:id              2,
-                   :id-cartao       6,
-                   :data            (jt/local-date-time 2021 12 3 8 20 30),
-                   :valor           150.00,
-                   :estabelecimento "Cambly",
-                   :categoria       "Educação"}
-          compra3 {:id              3,
-                   :id-cartao       6,
-                   :data            (jt/local-date-time 2021 12 3 9 20 30),
-                   :valor           60.00,
-                   :estabelecimento "Cambly",
-                   :categoria       "Educação"}]
       (is (= #{{:categoria "Saúde", :gasto-total 30.0}
                {:categoria "Educação", :gasto-total 210.0}}
-             (lista-valor-total-por-categoria [compra2 compra3 compra1])))))
+             (lista-valor-total-por-categoria [ex/compra4 ex/compra5 ex/compra6]))))
 
   (testing "passar uma compra na lista inválida (sem o keyword de categoria)"
-    (let [compra1 {:id              1,
-                   :id-cartao       6,
-                   :data            (jt/local-date-time 2021 12 3 7 20 30),
-                   :valor           30.00,
-                   :estabelecimento "Pacheco"}
-          compra2 {:id              2,
-                   :id-cartao       6,
-                   :data            (jt/local-date-time 2021 12 3 8 20 30),
-                   :valor           150.00,
-                   :estabelecimento "Cambly",
-                   :categoria       "Educação"}
-          compra3 {:id              3,
-                   :id-cartao       6,
-                   :data            (jt/local-date-time 2021 12 3 9 20 30),
-                   :valor           60.00,
-                   :estabelecimento "Cambly",
-                   :categoria       "Educação"}]
       (is (thrown? clojure.lang.ExceptionInfo
-             (lista-valor-total-por-categoria [compra2 compra3 compra1])))))
+                   (lista-valor-total-por-categoria [ex/compra2 ex/compra3 ex/compraSemKeyWordCategoria]))))
 
   (testing "passar uma compra na lista inválida (sem o keyword de valor)"
-    (let [compra1 {:id              1,
-                   :id-cartao       6,
-                   :data            (jt/local-date-time 2021 12 3 7 20 30),
-                   :valor           30.00,
-                   :estabelecimento "Pacheco",
-                   :categoria       "Saúde"}
-          compra2 {:id              2,
-                   :id-cartao       6,
-                   :data            (jt/local-date-time 2021 12 3 8 20 30),
-                   :estabelecimento "Cambly",
-                   :categoria       "Educação"}
-          compra3 {:id              3,
-                   :id-cartao       6,
-                   :data            (jt/local-date-time 2021 12 3 9 20 30),
-                   :valor           60.00,
-                   :estabelecimento "Cambly",
-                   :categoria       "Educação"}]
       (is (thrown? clojure.lang.ExceptionInfo
-                   (lista-valor-total-por-categoria [compra2 compra3 compra1])))))
+                   (lista-valor-total-por-categoria [ex/compra2 ex/compra3 ex/compraSemKeyWordValor]))))
 
   (testing "passar uma lista vazia"
     (is (= #{} (lista-valor-total-por-categoria [])))
@@ -136,82 +65,32 @@
                  (total-lista-de-compras [nil])))
 
     (is (thrown? clojure.lang.ExceptionInfo
-                 (total-lista-de-compras [{:id              3,
-                                           :id-cartao       2,
-                                           :data            (jt/local-date-time 2022 12 21 7 20 30),
-                                           :estabelecimento "Cambly",
-                                           :categoria       "Educação"}])))))
+                 (total-lista-de-compras [ex/compraComValorErradoAssociadoAoKeyword])))))
 
 (deftest adicionar-compra-test
   (testing "passar uma compra com atributos corretos"
-    (let [compra1 {:id              1,
-                   :id-cartao       6,
-                   :data            (jt/local-date-time 2021 12 3 7 20 30),
-                   :valor           30.00,
-                   :estabelecimento "Cambly",
-                   :categoria       "Educação"}
-          compra2 {:id              2,
-                   :id-cartao       6,
-                   :data            (jt/local-date-time 2021 12 3 8 20 30),
-                   :valor           150.00,
-                   :estabelecimento "Cambly",
-                   :categoria       "Educação"}
-          compra3 {:id              3,
-                   :id-cartao       6,
-                   :data            (jt/local-date-time 2021 12 3 9 20 30),
-                   :valor           60.00,
-                   :estabelecimento "Cambly",
-                   :categoria       "Educação"}]
-      (is (= [compra1 compra2 compra3]
-             (adicionar-compra compra3 [compra1 compra2])))))
+    (is (= [ex/compra1 ex/compra2 ex/compra3]
+           (adicionar-compra ex/compra3 [ex/compra1 ex/compra2]))))
 
   (testing "tentar adicionar nil como compra"
     (is (thrown? clojure.lang.ExceptionInfo
                  (adicionar-compra nil [(db/todas-as-compras)]))))
 
-  (testing "passar uma compra sem uma keyword (falta estabelecimento)"
+  (testing "passar uma compra sem uma keyword (falta valor)"
     (is (thrown? clojure.lang.ExceptionInfo
-                 (adicionar-compra {:id        3,
-                                    :id-cartao 2,
-                                    :data      (jt/local-date-time 2022 12 21 7 20 30),
-                                    :valor     300.00,
-                                    :categoria "Educação"} [(db/todas-as-compras)]))))
+                 (adicionar-compra ex/compraSemKeyWordValor [(db/todas-as-compras)]))))
 
   (testing "passar uma compra com um valor inválido para uma keyword (id-cartão não pode ser uma string)"
     (is (thrown? clojure.lang.ExceptionInfo
-                 (adicionar-compra {:id              3,
-                                    :id-cartao       "2",
-                                    :data            (jt/local-date-time 2022 12 21 7 20 30),
-                                    :valor           300.00,
-                                    :estabelecimento "Cambly",
-                                    :categoria       "Educação"} [(db/todas-as-compras)]))))
-
+                 (adicionar-compra ex/compraComValorErradoAssociadoAoKeyword [(db/todas-as-compras)]))))
 
 
   (testing "passar uma lista de compras nil"
-    (is (thrown? clojure.lang.ExceptionInfo
-                 (adicionar-compra {:id              3,
-                                    :id-cartao       "2",
-                                    :data            (jt/local-date-time 2022 12 21 7 20 30),
-                                    :valor           300.00,
-                                    :estabelecimento "Cambly",
-                                    :categoria       "Educação"} nil))))
+    (is (= [ex/compra3] (adicionar-compra ex/compra3 nil))))
 
   (testing "passar uma lista vazia"
-    (is (thrown? clojure.lang.ExceptionInfo
-                 (adicionar-compra {:id              3,
-                                    :id-cartao       "2",
-                                    :data            (jt/local-date-time 2022 12 21 7 20 30),
-                                    :valor           300.00,
-                                    :estabelecimento "Cambly",
-                                    :categoria       "Educação"} []))))
+    (is (= [ex/compra2] (adicionar-compra ex/compra2 []))))
 
   (testing "passar um dicionário no lugar da lista"
     (is (thrown? clojure.lang.ExceptionInfo
-                 (adicionar-compra {:id              3,
-                                    :id-cartao       "2",
-                                    :data            (jt/local-date-time 2022 12 21 7 20 30),
-                                    :valor           300.00,
-                                    :estabelecimento "Cambly",
-                                    :categoria       "Educação"} {})))))
-
+                 (adicionar-compra ex/compra1 {})))))
