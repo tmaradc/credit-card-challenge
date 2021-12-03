@@ -53,3 +53,6 @@
 
 (defn todas-as-compras []
   [compra1, compra2, compra3, compra4])
+
+
+(+ 300.00 30.50 90.50 25.50)

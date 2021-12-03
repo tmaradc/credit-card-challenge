@@ -8,6 +8,9 @@
 ;TODO: Depois mudar o id para Uuid
 
 (def PosInt (s/pred pos-int? 'inteiro-positivo))
+
+(def PosNum (s/pred #(or (pos? %) (zero? %)) 'numero-positivo))
+
 (def DateTime (class (jt/local-date-time)))
 
 (def Cliente {:id    PosInt,
@@ -25,18 +28,36 @@
 (def Compra {:id              PosInt,
              :id-cartao       PosInt,
              :data            DateTime,
-             :valor           s/Num,
+             :valor           PosNum,
              :estabelecimento s/Str,
              :categoria       s/Str})
+
+(def CompraSemIds {(s/optional-key :id) PosInt,
+                   (s/optional-key :id-cartao) PosInt,
+                   :data            s/Str,
+                   :valor           PosNum,
+                   :estabelecimento s/Str,
+                   :categoria       s/Str})
+
+(def ConjuntoCompraSemIds #{CompraSemIds})
+
+(s/validate CompraSemIds {:id 1,
+                          :id-cartao 5
+                          :data "21/12/2022 07:20:30",
+                          :valor 300.0,
+                          :estabelecimento "Cambly",
+                          :categoria "Educação"})
 
 (s/def ListaDeCompras [Compra])
 
 (def CategoriaGasto {:categoria   s/Str
-                     :gasto-total s/Num})
+                     :gasto-total PosNum})
 
-(def ListaCategoriaGasto [CategoriaGasto])
+(def CojuntoCategoriaGasto #{CategoriaGasto})
 
 (def ListaPorCategoria [s/Str ListaDeCompras])
+
+(def Funcs (s/enum > < = <= >= not=))
 
 ;(s/validate ListaDeCompras [db/compra1])
 ;(s/validate ListaDeCompras (db/todas-as-compras))
@@ -47,6 +68,5 @@
 ;                    :valor           25.50,
 ;                    :estabelecimento "Mercado Extra",
 ;                    :categoria       "Alimentação"})
-;
+;(s/validate PosNum -9)
 ;(println (class (jt/local-date-time)))
-

@@ -10,28 +10,41 @@
   (conj lista-de-compras compra))
 
 
-(s/defn listar-compras :- nil
+(s/defn listar-compras-print :- nil
   [lista-de-compras :- md/ListaDeCompras]
   (doseq [compra lista-de-compras]
     (println "-------------------------------------------")
     ;(println "id:" (:id compra))
     ;(println "id-cartão:" (:id-cartao compra))
-    (println "data:" (jt/format "yyyy/MM/dd HH:mm:ss" (:data compra)))
+    (println "data:" (jt/format "dd/MM/yyyy HH:mm:ss" (:data compra)))
     (println "valor:" (:valor compra))
     (println "estabelecimento:" (:estabelecimento compra))
     (println "categoria:" (:categoria compra))
-    (println "\n")
-    lista-de-compras
-    ))
+    (println "\n")))
 
-(listar-compras (db/todas-as-compras))
+(s/defn format-data-de-compra :- md/CompraSemIds
+  [compra :- md/Compra]
+  (update compra :data #(jt/format "dd/MM/yyyy HH:mm:ss" %))
+  )
 
-(adicionar-compra {:id              5,
-                   :id-cartao       2,
-                   :data            (jt/local-date-time 2022 12 21 7 20 30),
-                   :valor           900.00,
-                   :estabelecimento "Cambly",
-                   :categoria       "Educação"} (db/todas-as-compras))
+(s/defn listar-compras :- md/ConjuntoCompraSemIds
+  [lista-de-compras :- md/ListaDeCompras]
+  (->> lista-de-compras
+       (map format-data-de-compra)
+       (map #(dissoc % :id :id-cartao))
+       (into #{})))
+
+
+;(println (listar-compras (db/todas-as-compras)))
+
+;(println (dissoc {:id 1, :nome "a"} :id ))
+
+;(adicionar-compra {:id              5,
+;                   :id-cartao       2,
+;                   :data            (jt/local-date-time 2022 12 21 7 20 30),
+;                   :valor           900.00,
+;                   :estabelecimento "Cambly",
+;                   :categoria       "Educação"} (db/todas-as-compras))
 
 
 ;--------------------------- GASTOS POR CATEGORIA ----------------------------
@@ -49,28 +62,32 @@
 ;  (->> lista-de-compras
 ;       (map :categoria)
 ;       (filter #(not= % categoria))
-;       count 0
+;       count
 ;       (= 0)))
 
-; TODO: VOLTAR AQUI PARA COLOCAR SCHEMA NOS PARÂMETROS DESSA FUNC
 (s/defn total-por-categoria :- md/CategoriaGasto
-        "Recebe lista de compras agrupadas por categoria e efetua o calculo dos totais de cada categoria"
-        [[categoria lista-compras]] :- md/ListaPorCategoria
-  ;{:pre (mesma-categoria-para-todos? categoria lista-compras)}
-        {:categoria   categoria
-         :gasto-total (total-lista-de-compras lista-compras)})
+  "Recebe lista de compras agrupadas por categoria e efetua o calculo dos totais de cada categoria"
+  [[categoria lista-compras]] :- md/ListaPorCategoria
+  ;{:pre [(mesma-categoria-para-todos? categoria lista-compras)]}
+  {:categoria   categoria
+   :gasto-total (total-lista-de-compras lista-compras)})
+
+(total-por-categoria ["Alimentação" [db/compra1 db/compra2] ] )
+
+(println [db/compra1 db/compra4])
 
 ;(println (total-por-categoria "Alimentação" (db/todas-as-compras)))
 ;(println (total-por-categoria nil (db/todas-as-compras)))
 ;(println (total-por-categoria "Alimentação" [nil]))
 ;(println (total-por-categoria nil [nil]))
 
-(s/defn lista-valor-total-por-categoria :- md/ListaCategoriaGasto
-        "Agrupa compras por categoria fazendo calculo de totais da categoria"
-        [lista-de-compras :- md/ListaDeCompras]
-        (->> lista-de-compras
-             (group-by :categoria)
-             (map total-por-categoria)))
+(s/defn lista-valor-total-por-categoria :- md/CojuntoCategoriaGasto
+  "Agrupa compras por categoria fazendo calculo de totais da categoria"
+  [lista-de-compras :- md/ListaDeCompras]
+  (->> lista-de-compras
+       (group-by :categoria)
+       (map total-por-categoria)
+       (into #{})))
 
 ;(println (lista-valor-total-por-categoria (db/todas-as-compras)))
 ;(println (contains? (db/todas-as-compras) :categoria))
@@ -133,16 +150,15 @@
 
 ;(println (busca-por-estabelecimento "Mercado Extra" (db/todas-as-compras)))
 
-; TODO: como definir o schema de condicao?
 (s/defn busca-por-valor :- md/ListaDeCompras
   "Filtra as compras feitas pelo valor, podendo usar operadores relacionais para indicar o range"
   [lista-de-compras :- md/ListaDeCompras,
-   condicao,
+   condicao :- md/Funcs,
    valor :- s/Num]
   (filter #(condicao (:valor %) valor) lista-de-compras))
 
-; (let [compras (db/todas-as-compras)]
-;  (println (busca-por-valor compras = 90.5)))
+ (let [compras (db/todas-as-compras)]
+  (println (busca-por-valor compras = 90.5)))
 
 (s/defn busca-por-intervalo-fechado-valor :- md/ListaDeCompras
         "Filtra as compras feitas pelo range de valores"
