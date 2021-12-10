@@ -132,7 +132,7 @@
 
 (s/defn fatura-por-cartao :- s/Num
         "Filtra as compras feitas por cartão"
-        [id-cartao :- md/PosInt,
+        [id-cartao :- java.util.UUID,
          lista :- md/ListaDeCompras]
         (->> lista
              (filter #(= id-cartao (:id-cartao %)))

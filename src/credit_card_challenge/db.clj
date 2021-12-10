@@ -1,6 +1,103 @@
 (ns credit-card-challenge.db
-  (:require [java-time :as jt]))
+  (:require [java-time :as jt]
+            [datomic.api :as d]))
 
+(def db-uri "datomic:dev://localhost:4334/credit-card")
+
+(defn uuid [] (java.util.UUID/randomUUID))
+(def schema [
+             ; Cliente
+             {:db/ident       :cliente/id
+              :db/valueType   :db.type/uuid
+              :db/cardinality :db.cardinality/one
+              :db/unique      :db.unique/identity}
+             {:db/ident       :cliente/nome
+              :db/valueType   :db.type/string
+              :db/cardinality :db.cardinality/one
+              :db/doc         "O nome de um cliente"}
+             {:db/ident       :cliente/cpf
+              :db/valueType   :db.type/string
+              :db/cardinality :db.cardinality/one
+              :db/doc         "O cpf de um cliente"}
+             {:db/ident       :cliente/email
+              :db/valueType   :db.type/string
+              :db/cardinality :db.cardinality/one
+              :db/doc         "O email de um cliente"}
+
+             ; Cartão de Crédito
+             {:db/ident       :cartao/id
+              :db/valueType   :db.type/uuid
+              :db/cardinality :db.cardinality/one
+              :db/unique      :db.unique/identity}
+             {:db/ident       :cartao/id-cliente
+              :db/valueType   :db.type/ref
+              :db/cardinality :db.cardinality/one}
+             {:db/ident       :cartao/cvv
+              :db/valueType   :db.type/string
+              :db/cardinality :db.cardinality/one
+              :db/doc         "O cvv do cartão"}
+             {:db/ident       :cartao/validade
+              :db/valueType   :db.type/string
+              :db/cardinality :db.cardinality/one
+              :db/doc         "A validade do cartão"}
+             {:db/ident       :cartao/numero
+              :db/valueType   :db.type/string
+              :db/cardinality :db.cardinality/one
+              :db/doc         "O numero do cartão"}
+             {:db/ident       :cartao/limite
+              :db/valueType   :db.type/double
+              :db/cardinality :db.cardinality/one
+              :db/doc         "O limite do cartão"}
+
+             ;Compra
+             {:db/ident       :compra/id
+              :db/valueType   :db.type/uuid
+              :db/cardinality :db.cardinality/one
+              :db/unique      :db.unique/identity}
+             {:db/ident       :compra/id-cartao
+              :db/valueType   :db.type/ref
+              :db/cardinality :db.cardinality/one
+              :db/doc         "O id do cartão que foi efetuada a compra"}
+             {:db/ident       :compra/valor
+              :db/valueType   :db.type/double
+              :db/cardinality :db.cardinality/one
+              :db/doc         "O valor da compra"}
+             {:db/ident       :compra/estabelecimento
+              :db/valueType   :db.type/string
+              :db/cardinality :db.cardinality/one
+              :db/doc         "O estabelecimento da compra"}
+             {:db/ident       :compra/categoria
+              :db/valueType   :db.type/string
+              :db/cardinality :db.cardinality/one
+              :db/doc         "A categoria da compra"}
+             {:db/ident       :compra/data
+              :db/valueType   :db.type/string
+              :db/cardinality :db.cardinality/one
+              :db/doc         "O data da compra"}
+             ])
+
+(defn abre-conexao! []
+  (d/create-database db-uri)
+  (d/connect db-uri))
+
+(defn apaga-banco! []
+  (d/delete-database db-uri))
+
+(defn cria-schema! [conn]
+  (d/transact conn schema))
+
+(defn adiciona-cliente!
+  [conn clientes]
+  (d/transact conn clientes)
+  )
+
+(defn adiciona-cartao!
+  [conn cartoes]
+  (d/transact conn cartoes)
+  )
+
+;(pprint @(d/transact conn [[:db/add id-entidade :produto/preco 0.1M]]))
+;[:db/add [:produto/id (:produto/id produto)] :produto/categoria [:categoria/id (:categoria/id categoria)]]
 ;--------------------------------- CLIENTE ---------------------------------
 (def usuario {:id    1,
               :nome  "Tamara",

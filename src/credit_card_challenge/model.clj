@@ -5,7 +5,7 @@
 
 (s/set-fn-validation! true)
 
-;TODO: Depois mudar o id para Uuid
+(defn uuid [] (java.util.UUID/randomUUID))
 
 (def PosInt (s/pred pos-int? 'inteiro-positivo))
 
@@ -13,27 +13,43 @@
 
 (def DateTime (class (jt/local-date-time)))
 
-(def Cliente {:id    PosInt,
+(def Cliente {:id    java.util.UUID,
               :nome  s/Str,
               :cpf   s/Str,
               :email s/Str})
 
-(def CartaoDeCredito {:id         PosInt,
-                      :id-cliente PosInt,
+(defn novo-cliente
+  [nome cpf email]
+  {:cliente/id (uuid)
+   :cliente/nome nome
+   :cliente/cpf cpf
+   :cliente/email email})
+
+(def CartaoDeCredito {:id         java.util.UUID,
+                      :id-cliente java.util.UUID,
                       :numero     s/Str,
                       :cvv        s/Str,
                       :validade   s/Str,
                       :limite     s/Num})
 
-(def Compra {:id              PosInt,
-             :id-cartao       PosInt,
+(defn novo-cartao
+  [id-cliente numero cvv validade limite]
+  {:cartao/id (uuid)
+   :cartao/id-cliente id-cliente
+   :cartao/numero numero
+   :cartao/cvv cvv
+   :cartao/validade validade
+   :cartao/limite limite})
+
+(def Compra {:id              java.util.UUID,
+             :id-cartao       java.util.UUID,
              :data            DateTime,
              :valor           PosNum,
              :estabelecimento s/Str,
              :categoria       s/Str})
 
-(def CompraSemIds {(s/optional-key :id) PosInt,
-                   (s/optional-key :id-cartao) PosInt,
+(def CompraSemIds {(s/optional-key :id) java.util.UUID,
+                   (s/optional-key :id-cartao) java.util.UUID,
                    :data            s/Str,
                    :valor           PosNum,
                    :estabelecimento s/Str,
@@ -41,12 +57,12 @@
 
 (def ConjuntoCompraSemIds #{CompraSemIds})
 
-(s/validate CompraSemIds {:id 1,
-                          :id-cartao 5
-                          :data "21/12/2022 07:20:30",
-                          :valor 300.0,
-                          :estabelecimento "Cambly",
-                          :categoria "Educação"})
+;(s/validate CompraSemIds {:id 1,
+;                          :id-cartao 5
+;                          :data "21/12/2022 07:20:30",
+;                          :valor 300.0,
+;                          :estabelecimento "Cambly",
+;                          :categoria "Educação"})
 
 (s/def ListaDeCompras [Compra])
 
