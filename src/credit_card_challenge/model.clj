@@ -48,6 +48,15 @@
              :estabelecimento s/Str,
              :categoria       s/Str})
 
+(defn nova-compra
+  [id-cartao data valor estabelecimento categoria]
+  {:compra/id              (uuid),
+   :compra/id-cartao       id-cartao,
+   :compra/data            data,
+   :compra/valor           valor,
+   :compra/estabelecimento estabelecimento,
+   :compra/categoria       categoria})
+
 (def CompraSemIds {(s/optional-key :id) java.util.UUID,
                    (s/optional-key :id-cartao) java.util.UUID,
                    :data            s/Str,

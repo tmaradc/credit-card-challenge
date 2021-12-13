@@ -30,7 +30,7 @@
               :db/cardinality :db.cardinality/one
               :db/unique      :db.unique/identity}
              {:db/ident       :cartao/id-cliente
-              :db/valueType   :db.type/ref
+              :db/valueType   :db.type/uuid
               :db/cardinality :db.cardinality/one}
              {:db/ident       :cartao/cvv
               :db/valueType   :db.type/string
@@ -55,7 +55,7 @@
               :db/cardinality :db.cardinality/one
               :db/unique      :db.unique/identity}
              {:db/ident       :compra/id-cartao
-              :db/valueType   :db.type/ref
+              :db/valueType   :db.type/uuid
               :db/cardinality :db.cardinality/one
               :db/doc         "O id do cartão que foi efetuada a compra"}
              {:db/ident       :compra/valor
@@ -88,13 +88,26 @@
 
 (defn adiciona-cliente!
   [conn clientes]
-  (d/transact conn clientes)
-  )
+  (d/transact conn clientes))
 
 (defn adiciona-cartao!
   [conn cartoes]
-  (d/transact conn cartoes)
-  )
+  (d/transact conn cartoes))
+
+(defn adiciona-compra!
+  [conn cartoes]
+  (let [cartoes (map #(update % :compra/data jt/format) cartoes)]
+    (d/transact conn cartoes)))
+
+(defn compras-por-cartao
+  [conn id-cartao]
+  (let [compras (d/q '[:find [(pull ?entidade [*]) ...]
+               :in $ ?cartao
+               :where [?entidade :compra/id-cartao ?cartao]]
+             conn id-cartao)]
+    (map #(update % :compra/data jt/local-date-time) compras)))
+
+
 
 ;(pprint @(d/transact conn [[:db/add id-entidade :produto/preco 0.1M]]))
 ;[:db/add [:produto/id (:produto/id produto)] :produto/categoria [:categoria/id (:categoria/id categoria)]]
